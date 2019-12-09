@@ -14,6 +14,7 @@ if ( ! class_exists( 'EDU_DibsEasy' ) ) {
 			$this->id          = 'edu-dibseasy';
 			$this->displayName = __( 'Dibs Easy Integration', 'eduadmin-dibs-easy-integration' );
 			$this->description = '';
+			$this->type        = 'payment';
 
 			$this->init_form_fields();
 			$this->init_settings();
@@ -125,7 +126,7 @@ var checkoutOptions = {
 
 var checkout = new Dibs.Checkout(checkoutOptions);
 checkout.on("payment-completed", function(response) {
-   console.log(response); 
+   location.href = "' . EDU()->session['return-url'] . '"
 });
 </script>';
 			}
@@ -150,27 +151,45 @@ checkout.on("payment-completed", function(response) {
 
 			$current_url = esc_url( "{$_SERVER['REQUEST_SCHEME']}://{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}" );
 
-			$current_url = $current_url . ( stristr( $current_url, '?' ) ? "&paymentId={paymentGuid}" : "?paymentId={paymentGuid}" ) . '&status=checkout_complete';
-
 			$terms_url = $this->get_option( 'termsurl', '' );
 
 			$reference_id = 0;
 
 			$_event = null;
 
+			$completed_url = $current_url;
+
 			if ( ! empty( $ebi->EventBooking['BookingId'] ) ) {
 				$reference_id = intval( $ebi->EventBooking['BookingId'] );
 
 				$_event      = EDUAPI()->OData->Events->GetItem( $ebi->EventBooking['EventId'] );
 				$current_url = $current_url . "&booking_id=" . $reference_id;
+
+				$completed_url = add_query_arg(
+					array(
+						'paymentId'  => '{paymentGuid}',
+						'act'        => 'paymentCompleted',
+						'booking_id' => $reference_id
+					),
+					$current_url
+				);
 			}
 
 			if ( ! empty( $ebi->EventBooking['ProgrammeBookingId'] ) ) {
 				$reference_id = intval( $ebi->EventBooking['ProgrammeBookingId'] );
 
-				$_event      = EDUAPI()->OData->ProgrammeStarts->GetItem( $ebi->EventBooking['ProgrammeStartId'] );
-				$current_url = $current_url . "&programme_booking_id=" . $reference_id;
+				$_event        = EDUAPI()->OData->ProgrammeStarts->GetItem( $ebi->EventBooking['ProgrammeStartId'] );
+				$current_url   = $current_url . "&programme_booking_id=" . $reference_id;
+				$completed_url = add_query_arg(
+					array(
+						'paymentId'            => '{paymentGuid}',
+						'act'                  => 'paymentCompleted',
+						'programme_booking_id' => $reference_id
+					),
+					$current_url
+				);
 			}
+
 
 			$rowExtraInfo = "";
 
@@ -219,7 +238,7 @@ checkout.on("payment-completed", function(response) {
 				$cart_item['reference'] = $order_row['ItemNumber'];
 				$cart_item['name']      = $order_row['Description'] . $rowExtraInfo;
 				$cart_item['quantity']  = intval( $order_row['Quantity'] );
-				$cart_item['unit']      = __( 'pcs', 'eduadmin-dibs-easy-integration' );
+				$cart_item['unit']      = __( 'pcs', 'frontend', 'eduadmin-dibs-easy-integration' );
 
 				$grossTotalAmount = $priceWithVAT( $order_row['TotalPriceIncDiscount'], $order_row['VatPercent'], $order_row['PriceIncVat'] );
 				$netTotalAmount   = $priceWithoutVAT( $order_row['TotalPriceIncDiscount'], $order_row['VatPercent'], $order_row['PriceIncVat'] );
@@ -244,7 +263,7 @@ checkout.on("payment-completed", function(response) {
 				'charge'                      => true,
 				'merchantHandlesConsumerData' => false,
 				'url'                         => $current_url,
-				'returnUrl'                   => $current_url,
+				'returnUrl'                   => $completed_url,
 				'termsUrl'                    => $terms_url,
 				'consumerType'                => array(
 					'supportedTypes' => array( 'B2B', 'B2C' ),
@@ -271,6 +290,7 @@ checkout.on("payment-completed", function(response) {
 			$payment = json_decode( $checkout_result );
 
 			EDU()->session['dibseasy-order-id'] = $payment->paymentId;
+			EDU()->session['return-url'] = $completed_url;
 
 			return $payment;
 		}
@@ -374,6 +394,7 @@ checkout.on("payment-completed", function(response) {
 					}
 
 					EDU()->session['dibseasy-order-id'] = null;
+					EDU()->session['return-url'] = null;
 				}
 			}
 		}

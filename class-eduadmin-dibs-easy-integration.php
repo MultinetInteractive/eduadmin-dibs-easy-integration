@@ -195,7 +195,6 @@ checkout.on("payment-completed", function(response) {
 			$dibsOrder['order']['reference'] = $reference_id;
 			$dibsOrder['order']['items']     = array();
 
-			$discountSum           = 0;
 			$totalGrossTotalAmount = 0;
 
 			$priceWithVAT = function ( $price, $vatPercent, $priceIncVat ) {

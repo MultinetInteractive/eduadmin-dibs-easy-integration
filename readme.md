@@ -21,9 +21,15 @@ Requires the following PHP-modules
 
 == Installation ==
 
--   Upload the zip-file (or install from WordPress) and activate the plugin
--   Provide the API key from EduAdmin.
--   Create pages for the different views and give them their shortcodes
+- Download and install the plugin from the plugin repository
+- Enter the Dibs credentials into the plugins setting page
+- Enable test mode (so you can try it out first)
+- Add a page with the shortcode `[eduadmin-dibs-testpage]` (takes attributes `programmebookingid` or `bookingid`)
+- Test if the workflow works
+  - Go to the test page
+  - See if any errors show up
+  - Use one of the test cards from Dibs
+- When you're done testing, disable test mode and publish your website to the public
 
 == Changelog ==
 

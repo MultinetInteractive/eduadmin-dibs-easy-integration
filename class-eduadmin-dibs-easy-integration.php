@@ -22,6 +22,7 @@ if ( ! class_exists( 'EDU_DibsEasy' ) ) {
 			add_action( 'eduadmin-checkpaymentplugins', array( $this, 'intercept_booking' ) );
 			add_action( 'eduadmin-processbooking', array( $this, 'process_booking' ) );
 			add_action( 'eduadmin-bookingcompleted', array( $this, 'process_dibsresponse' ) );
+			add_action( 'wp_loaded', array( $this, 'process_paymentstatus' ) );
 
 			add_shortcode( 'eduadmin-dibs-testpage', array( $this, 'test_page' ) );
 		}
@@ -163,13 +164,14 @@ checkout.on("payment-completed", function(response) {
 				$reference_id = intval( $ebi->EventBooking['BookingId'] );
 
 				$_event      = EDUAPI()->OData->Events->GetItem( $ebi->EventBooking['EventId'] );
-				$current_url = $current_url . "&booking_id=" . $reference_id;
+				$current_url = $current_url;
 
 				$completed_url = add_query_arg(
 					array(
-						'paymentId'  => '{paymentGuid}',
-						'act'        => 'paymentCompleted',
-						'booking_id' => $reference_id
+						'paymentId'      => '{paymentGuid}',
+						'act'            => 'paymentCompleted',
+						'edu-valid-form' => wp_create_nonce( 'edu-booking-confirm' ),
+						'booking_id'     => $reference_id
 					),
 					$current_url
 				);
@@ -179,11 +181,12 @@ checkout.on("payment-completed", function(response) {
 				$reference_id = intval( $ebi->EventBooking['ProgrammeBookingId'] );
 
 				$_event        = EDUAPI()->OData->ProgrammeStarts->GetItem( $ebi->EventBooking['ProgrammeStartId'] );
-				$current_url   = $current_url . "&programme_booking_id=" . $reference_id;
+				$current_url   = $current_url;
 				$completed_url = add_query_arg(
 					array(
 						'paymentId'            => '{paymentGuid}',
 						'act'                  => 'paymentCompleted',
+						'edu-valid-form'       => wp_create_nonce( 'edu-booking-confirm' ),
 						'programme_booking_id' => $reference_id
 					),
 					$current_url
@@ -262,7 +265,7 @@ checkout.on("payment-completed", function(response) {
 				'integrationType'             => 'embeddedCheckout',
 				'charge'                      => true,
 				'merchantHandlesConsumerData' => false,
-				'url'                         => $current_url,
+				'url'                         => $completed_url,
 				'returnUrl'                   => $completed_url,
 				'termsUrl'                    => $terms_url,
 				'consumerType'                => array(
@@ -290,7 +293,7 @@ checkout.on("payment-completed", function(response) {
 			$payment = json_decode( $checkout_result );
 
 			EDU()->session['dibseasy-order-id'] = $payment->paymentId;
-			EDU()->session['return-url'] = $completed_url;
+			EDU()->session['return-url']        = $completed_url;
 
 			return $payment;
 		}
@@ -300,7 +303,7 @@ checkout.on("payment-completed", function(response) {
 				return;
 			}
 
-			if ( ! empty( $_GET['paymentId'] ) && ! empty( $_GET['status'] ) /*&& EDU()->session['dibseasy-order-id'] == $_GET['paymentId']*/ ) {
+			if ( ! empty( $_GET['paymentId'] ) && ! empty( $_GET['act'] ) && 'paymentCompleted' === $_GET['act'] && EDU()->session['dibseasy-order-id'] == $_GET['paymentId'] ) {
 
 				$booking_id = 0;
 				if ( isset( $_GET['booking_id'] ) ) {
@@ -371,10 +374,17 @@ checkout.on("payment-completed", function(response) {
 
 				echo "<pre>" . print_r( $payment, true ) . "</pre>";
 
-				if ( 'checkout_complete' === $_GET['status'] ) {
+				if ( 'paymentCompleted' === $_GET['act'] ) {
 					if ( ! $test_mode ) {
-						$patch_booking       = new stdClass();
-						$patch_booking->Paid = true;
+						$patch_booking = new stdClass();
+
+						$status = true;
+
+						if ( isset( $_GET['paymentFailed'] ) && 'true' === $_GET['paymentFailed'] ) {
+							$status = false;
+						}
+
+						$patch_booking->Paid = $status;
 
 						// We're setting this as a Card Payment, so that our service in the background will remove it if it doesn't get paid in time (15 minute slot)
 						$patch_booking->PaymentMethodId = 2;
@@ -394,7 +404,7 @@ checkout.on("payment-completed", function(response) {
 					}
 
 					EDU()->session['dibseasy-order-id'] = null;
-					EDU()->session['return-url'] = null;
+					EDU()->session['return-url']        = null;
 				}
 			}
 		}
@@ -444,6 +454,35 @@ checkout.on("payment-completed", function(response) {
 					'default'     => 'no',
 				),
 			);
+		}
+
+		public function process_paymentstatus() {
+			if ( 'no' === $this->get_option( 'enabled', 'no' ) ) {
+				return;
+			}
+
+			if ( ! empty( $_GET['paymentId'] ) && ! empty( $_GET['status'] ) ) {
+
+				$booking_id = 0;
+				if ( isset( $_GET['booking_id'] ) ) {
+					$booking_id = intval( $_GET['booking_id'] );
+				}
+
+				$programme_booking_id = 0;
+				if ( isset( $_GET['programme_booking_id'] ) ) {
+					$programme_booking_id = intval( $_GET['programme_booking_id'] );
+				}
+
+				$test_mode = ! checked( $this->get_option( 'test_mode', 'no' ), '1', false );
+
+				$checkout_url = $test_mode ?
+					EDU_DibsEasy::DibsEasyLiveApiUrl :
+					EDU_DibsEasy::DibsEasyTestApiUrl;
+
+				$secret_key = $test_mode ?
+					$this->get_option( 'live_secret_key', '' ) :
+					$this->get_option( 'test_secret_key', '' );
+			}
 		}
 	}
 }

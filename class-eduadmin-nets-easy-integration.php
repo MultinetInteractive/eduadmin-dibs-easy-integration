@@ -1,18 +1,18 @@
 <?php
 defined( 'ABSPATH' ) || die( 'This plugin must be run within the scope of WordPress.' );
 
-if ( ! class_exists( 'EDU_DibsEasy' ) ) {
-	class EDU_DibsEasy extends EDU_Integration {
+if ( ! class_exists( 'EDU_NetsEasy' ) ) {
+	class EDU_NetsEasy extends EDU_Integration {
 
-		const DibsEasyTestApiUrl = 'https://test.api.dibspayment.eu/v1/payments/';
-		const DibsEasyLiveApiUrl = 'https://api.dibspayment.eu/v1/payments/';
+		const NetsEasyTestApiUrl = 'https://test.api.dibspayment.eu/v1/payments/';
+		const NetsEasyLiveApiUrl = 'https://api.dibspayment.eu/v1/payments/';
 
-		const DibsEasyTestCheckoutUrl = 'https://test.checkout.dibspayment.eu/v1/checkout.js?v=1';
-		const DibsEasyLiveCheckoutUrl = 'https://checkout.dibspayment.eu/v1/checkout.js?v=1';
+		const NetsEasyTestCheckoutUrl = 'https://test.checkout.dibspayment.eu/v1/checkout.js?v=1';
+		const NetsEasyLiveCheckoutUrl = 'https://checkout.dibspayment.eu/v1/checkout.js?v=1';
 
 		public function __construct() {
-			$this->id          = 'edu-dibseasy';
-			$this->displayName = __( 'Dibs Easy Integration', 'eduadmin-dibs-easy-integration' );
+			$this->id          = 'edu-netseasy';
+			$this->displayName = __( 'Nets Easy Integration', 'eduadmin-nets-easy-integration' );
 			$this->description = '';
 			$this->type        = 'payment';
 
@@ -21,10 +21,10 @@ if ( ! class_exists( 'EDU_DibsEasy' ) ) {
 
 			add_action( 'eduadmin-checkpaymentplugins', array( $this, 'intercept_booking' ) );
 			add_action( 'eduadmin-processbooking', array( $this, 'process_booking' ) );
-			add_action( 'eduadmin-bookingcompleted', array( $this, 'process_dibsresponse' ) );
+			add_action( 'eduadmin-bookingcompleted', array( $this, 'process_netsresponse' ) );
 			add_action( 'wp_loaded', array( $this, 'process_paymentstatus' ) );
 
-			add_shortcode( 'eduadmin-dibs-testpage', array( $this, 'test_page' ) );
+			add_shortcode( 'eduadmin-nets-testpage', array( $this, 'test_page' ) );
 		}
 
 		public function test_page( $attributes ) {
@@ -69,7 +69,7 @@ if ( ! class_exists( 'EDU_DibsEasy' ) ) {
 
 			$ebi = new EduAdmin_BookingInfo( $event_booking, $_customer, $_contact );
 
-			if ( ! empty( EDU()->session['dibseasy-order-id'] ) && ! empty( $_GET['paymentId'] ) && EDU()->session['dibseasy-order-id'] === $_GET['paymentId'] ) {
+			if ( ! empty( EDU()->session['netseasy-order-id'] ) && ! empty( $_GET['paymentId'] ) && EDU()->session['netseasy-order-id'] === $_GET['paymentId'] ) {
 				do_action( 'eduadmin-bookingcompleted', $ebi );
 			} else {
 				do_action( 'eduadmin-processbooking', $ebi );
@@ -99,11 +99,11 @@ if ( ! class_exists( 'EDU_DibsEasy' ) ) {
 
 			$ebi->NoRedirect = true;
 
-			if ( empty( $_GET['paymentId'] ) || empty( EDU()->session['dibseasy-order-id'] ) ) {
+			if ( empty( $_GET['paymentId'] ) || empty( EDU()->session['netseasy-order-id'] ) ) {
 
 				$checkout_url = ! checked( $this->get_option( 'test_mode', 'no' ), '1', false ) ?
-					EDU_DibsEasy::DibsEasyLiveCheckoutUrl :
-					EDU_DibsEasy::DibsEasyTestCheckoutUrl;
+					EDU_NetsEasy::NetsEasyLiveCheckoutUrl :
+					EDU_NetsEasy::NetsEasyTestCheckoutUrl;
 
 				$checkout_key = ! checked( $this->get_option( 'test_mode', 'no' ), '1', false ) ?
 					$this->get_option( 'live_checkout_key', '' ) :
@@ -118,14 +118,14 @@ if ( ! class_exists( 'EDU_DibsEasy' ) ) {
 
 				echo '
 <script type="text/javascript" src="' . $checkout_url . '"></script>
-<div id="dibs-checkout-content"></div>
+<div id="nets-checkout-content"></div>
 <script type="text/javascript">
 var checkoutOptions = {
     checkoutKey: "' . $checkout_key . '",
     paymentId: "' . $checkout->paymentId . '"
 };
 
-var checkout = new Dibs.Checkout(checkoutOptions);
+var checkout = new Nets.Checkout(checkoutOptions);
 checkout.on("payment-completed", function(response) {
    location.href = "' . EDU()->session['return-url'] . '"
 });
@@ -143,8 +143,8 @@ checkout.on("payment-completed", function(response) {
 			$test_mode = ! checked( $this->get_option( 'test_mode', 'no' ), '1', false );
 
 			$checkout_url = $test_mode ?
-				EDU_DibsEasy::DibsEasyLiveApiUrl :
-				EDU_DibsEasy::DibsEasyTestApiUrl;
+				EDU_NetsEasy::NetsEasyLiveApiUrl :
+				EDU_NetsEasy::NetsEasyTestApiUrl;
 
 			$secret_key = $test_mode ?
 				$this->get_option( 'live_secret_key', '' ) :
@@ -210,12 +210,12 @@ checkout.on("payment-completed", function(response) {
 				}
 			}
 
-			$dibsOrder                       = array();
-			$dibsOrder['order']              = array();
-			$dibsOrder['order']['amount']    = 0;
-			$dibsOrder['order']['currency']  = get_option( 'eduadmin-currency', 'SEK' );
-			$dibsOrder['order']['reference'] = $reference_id;
-			$dibsOrder['order']['items']     = array();
+			$netsOrder                       = array();
+			$netsOrder['order']              = array();
+			$netsOrder['order']['amount']    = 0;
+			$netsOrder['order']['currency']  = get_option( 'eduadmin-currency', 'SEK' );
+			$netsOrder['order']['reference'] = $reference_id;
+			$netsOrder['order']['items']     = array();
 
 			$totalGrossTotalAmount = 0;
 
@@ -241,7 +241,7 @@ checkout.on("payment-completed", function(response) {
 				$cart_item['reference'] = $order_row['ItemNumber'];
 				$cart_item['name']      = $order_row['Description'] . $rowExtraInfo;
 				$cart_item['quantity']  = intval( $order_row['Quantity'] );
-				$cart_item['unit']      = __( 'pcs', 'frontend', 'eduadmin-dibs-easy-integration' );
+				$cart_item['unit']      = __( 'pcs', 'frontend', 'eduadmin-nets-easy-integration' );
 
 				$grossTotalAmount = $priceWithVAT( $order_row['TotalPriceIncDiscount'], $order_row['VatPercent'], $order_row['PriceIncVat'] );
 				$netTotalAmount   = $priceWithoutVAT( $order_row['TotalPriceIncDiscount'], $order_row['VatPercent'], $order_row['PriceIncVat'] );
@@ -256,12 +256,12 @@ checkout.on("payment-completed", function(response) {
 
 				$totalGrossTotalAmount += $grossTotalAmount;
 
-				$dibsOrder['order']['items'][] = $cart_item;
+				$netsOrder['order']['items'][] = $cart_item;
 			}
 
-			$dibsOrder['order']['amount'] = $totalGrossTotalAmount;
+			$netsOrder['order']['amount'] = $totalGrossTotalAmount;
 
-			$dibsOrder['checkout'] = array(
+			$netsOrder['checkout'] = array(
 				'integrationType'             => 'embeddedCheckout',
 				'charge'                      => true,
 				'merchantHandlesConsumerData' => false,
@@ -276,7 +276,7 @@ checkout.on("payment-completed", function(response) {
 
 			$c = curl_init( $checkout_url );
 			curl_setopt( $c, CURLOPT_CUSTOMREQUEST, 'POST' );
-			curl_setopt( $c, CURLOPT_POSTFIELDS, json_encode( $dibsOrder ) );
+			curl_setopt( $c, CURLOPT_POSTFIELDS, json_encode( $netsOrder ) );
 			curl_setopt( $c, CURLOPT_RETURNTRANSFER, true );
 			curl_setopt( $c, CURLOPT_HTTPHEADER, array(
 				'Content-Type: application/json',
@@ -292,18 +292,18 @@ checkout.on("payment-completed", function(response) {
 
 			$payment = json_decode( $checkout_result );
 
-			EDU()->session['dibseasy-order-id'] = $payment->paymentId;
+			EDU()->session['netseasy-order-id'] = $payment->paymentId;
 			EDU()->session['return-url']        = $completed_url;
 
 			return $payment;
 		}
 
-		public function process_dibsresponse() {
+		public function process_netsresponse() {
 			if ( 'no' === $this->get_option( 'enabled', 'no' ) ) {
 				return;
 			}
 
-			if ( ! empty( $_GET['paymentId'] ) && ! empty( $_GET['act'] ) && 'paymentCompleted' === $_GET['act'] && EDU()->session['dibseasy-order-id'] == $_GET['paymentId'] ) {
+			if ( ! empty( $_GET['paymentId'] ) && ! empty( $_GET['act'] ) && 'paymentCompleted' === $_GET['act'] && EDU()->session['netseasy-order-id'] == $_GET['paymentId'] ) {
 
 				$booking_id = 0;
 				if ( isset( $_GET['booking_id'] ) ) {
@@ -318,8 +318,8 @@ checkout.on("payment-completed", function(response) {
 				$test_mode = ! checked( $this->get_option( 'test_mode', 'no' ), '1', false );
 
 				$checkout_url = $test_mode ?
-					EDU_DibsEasy::DibsEasyLiveApiUrl :
-					EDU_DibsEasy::DibsEasyTestApiUrl;
+					EDU_NetsEasy::NetsEasyLiveApiUrl :
+					EDU_NetsEasy::NetsEasyTestApiUrl;
 
 				$secret_key = $test_mode ?
 					$this->get_option( 'live_secret_key', '' ) :
@@ -403,7 +403,7 @@ checkout.on("payment-completed", function(response) {
 						}
 					}
 
-					EDU()->session['dibseasy-order-id'] = null;
+					EDU()->session['netseasy-order-id'] = null;
 					EDU()->session['return-url']        = null;
 				}
 			}
@@ -412,45 +412,45 @@ checkout.on("payment-completed", function(response) {
 		public function init_form_fields() {
 			$this->setting_fields = array(
 				'enabled'           => array(
-					'title'       => __( 'Enabled', 'eduadmin-dibs-easy-integration' ),
+					'title'       => __( 'Enabled', 'eduadmin-nets-easy-integration' ),
 					'type'        => 'checkbox',
-					'description' => __( 'Enables/Disabled the integration with Dibs Easy', 'eduadmin-dibs-easy-integration' ),
+					'description' => __( 'Enables/Disabled the integration with Nets Easy', 'eduadmin-nets-easy-integration' ),
 					'default'     => 'no',
 				),
 				'live_secret_key'   => array(
-					'title'       => __( 'Secret Key (Live)', 'eduadmin-dibs-easy-integration' ),
+					'title'       => __( 'Secret Key (Live)', 'eduadmin-nets-easy-integration' ),
 					'type'        => 'text',
-					'description' => __( 'The secret key (Live) to authenticate with Dibs Easy', 'eduadmin-dibs-easy-integration' ),
+					'description' => __( 'The secret key (Live) to authenticate with Nets Easy', 'eduadmin-nets-easy-integration' ),
 					'default'     => '',
 				),
 				'live_checkout_key' => array(
-					'title'       => __( 'Checkout Key (Live)', 'eduadmin-dibs-easy-integration' ),
+					'title'       => __( 'Checkout Key (Live)', 'eduadmin-nets-easy-integration' ),
 					'type'        => 'text',
-					'description' => __( 'The checkout key (Live) to use with Dibs Easy', 'eduadmin-dibs-easy-integration' ),
+					'description' => __( 'The checkout key (Live) to use with Nets Easy', 'eduadmin-nets-easy-integration' ),
 					'default'     => '',
 				),
 				'test_secret_key'   => array(
-					'title'       => __( 'Secret Key (Test)', 'eduadmin-dibs-easy-integration' ),
+					'title'       => __( 'Secret Key (Test)', 'eduadmin-nets-easy-integration' ),
 					'type'        => 'text',
-					'description' => __( 'The secret key (Test) to authenticate with Dibs Easy', 'eduadmin-dibs-easy-integration' ),
+					'description' => __( 'The secret key (Test) to authenticate with Nets Easy', 'eduadmin-nets-easy-integration' ),
 					'default'     => '',
 				),
 				'test_checkout_key' => array(
-					'title'       => __( 'Checkout Key (Test)', 'eduadmin-dibs-easy-integration' ),
+					'title'       => __( 'Checkout Key (Test)', 'eduadmin-nets-easy-integration' ),
 					'type'        => 'text',
-					'description' => __( 'The checkout key (Test) to use with Dibs Easy', 'eduadmin-dibs-easy-integration' ),
+					'description' => __( 'The checkout key (Test) to use with Nets Easy', 'eduadmin-nets-easy-integration' ),
 					'default'     => '',
 				),
 				'termsurl'          => array(
-					'title'       => __( 'Terms and Conditions URL', 'eduadmin-dibs-easy-integration' ),
+					'title'       => __( 'Terms and Conditions URL', 'eduadmin-nets-easy-integration' ),
 					'type'        => 'text',
-					'description' => __( 'This URL is required for Dibs Easy', 'eduadmin-dibs-easy-integration' ),
+					'description' => __( 'This URL is required for Nets Easy', 'eduadmin-nets-easy-integration' ),
 					'default'     => '',
 				),
 				'test_mode'         => array(
-					'title'       => __( 'Test mode', 'eduadmin-dibs-easy-integration' ),
+					'title'       => __( 'Test mode', 'eduadmin-nets-easy-integration' ),
 					'type'        => 'checkbox',
-					'description' => __( 'Enables test mode, so you can test the integration', 'eduadmin-dibs-easy-integration' ),
+					'description' => __( 'Enables test mode, so you can test the integration', 'eduadmin-nets-easy-integration' ),
 					'default'     => 'no',
 				),
 			);
@@ -476,8 +476,8 @@ checkout.on("payment-completed", function(response) {
 				$test_mode = ! checked( $this->get_option( 'test_mode', 'no' ), '1', false );
 
 				$checkout_url = $test_mode ?
-					EDU_DibsEasy::DibsEasyLiveApiUrl :
-					EDU_DibsEasy::DibsEasyTestApiUrl;
+					EDU_NetsEasy::NetsEasyLiveApiUrl :
+					EDU_NetsEasy::NetsEasyTestApiUrl;
 
 				$secret_key = $test_mode ?
 					$this->get_option( 'live_secret_key', '' ) :

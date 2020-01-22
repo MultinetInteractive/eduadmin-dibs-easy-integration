@@ -20,7 +20,7 @@ gulp.task("readme-version", function () {
 
 gulp.task("eduadmin-version", function () {
     return gulp
-        .src("src/eduadmin-dibs-easy-integration.php")
+        .src("src/eduadmin-nets-easy-integration.php")
         .pipe(replace("$PLUGINVERSION$", pinfo.version))
         .pipe(replace("$PLUGINATLEAST$", pinfo.config.eduadmin.requiresAtLeast))
         .pipe(replace("$PLUGINTESTEDTO$", pinfo.config.eduadmin.testedUpTo))
@@ -28,6 +28,6 @@ gulp.task("eduadmin-version", function () {
 });
 
 gulp.task("default", function () {
-    gulp.watch("src/eduadmin-dibs-easy-integration.php", gulp.series("eduadmin-version"));
+    gulp.watch("src/eduadmin-nets-easy-integration.php", gulp.series("eduadmin-version"));
     gulp.watch("src/readme.md", gulp.series("readme-version"));
 })

@@ -1,8 +1,8 @@
 {
-  "name": "eduadmin-dibs-easy-integration",
+  "name": "eduadmin-nets-easy-integration",
   "version": "1.0.0",
   "private": true,
-  "repository": "https://github.com/MultinetInteractive/eduadmin-dibs-easy-integration.git",
+  "repository": "https://github.com/MultinetInteractive/eduadmin-nets-easy-integration.git",
   "author": "Chris Gårdenberg <chga@multinet.se>",
   "license": "MIT",
   "scripts": {

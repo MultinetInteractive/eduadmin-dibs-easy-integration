@@ -2,18 +2,19 @@
 defined( 'ABSPATH' ) || die( 'This plugin must be run within the scope of WordPress.' );
 
 /*
- * Plugin Name: EduAdmin Booking - Dibs Easy integration-plugin
+ * Plugin Name: EduAdmin Booking - Nets Easy integration-plugin
  * Plugin URI:  https://www.eduadmin.se
- * Description: Plugin to EduAdmin Booking to enable the Dibs Easy-integration
- * Version:	1.0.0
- * GitHub Plugin Uri: https://github.com/MultinetInteractive/eduadmin-dibs-easy-integration
- * Requires at least: 4.9
- * Tested up to: 5.2
+ * Description: Plugin to EduAdmin Booking to enable the Nets Easy-integration
+ * Version:	$PLUGINVERSION$
+ * GitHub Plugin Uri: https://github.com/MultinetInteractive/eduadmin-nets-easy-integration
+ * Requires at least: $PLUGINATLEAST$
+ * Tested up to: $PLUGINTESTEDTO$
  * Author: Chris Gårdenberg, MultiNet Interactive AB
  * Author URI: https://www.multinet.com
  * License: GPL3
- * Text Domain: eduadmin-dibs-easy-integration
+ * Text Domain: eduadmin-nets-easy-integration
  */
+
 /*
 	EduAdmin Booking plugin
 	Copyright (C) 2015-2019 Chris Gårdenberg, MultiNet Interactive AB
@@ -34,7 +35,7 @@ add_action( 'admin_init', function () {
 		add_action( 'admin_notices', function () {
 			?>
             <div class="error">
-                <p><?php esc_html_e( 'This plugin requires the EduAdmin-WordPress-plugin to be installed and activated.', 'eduadmin-dibs-easy-integration' ); ?></p>
+                <p><?php esc_html_e( 'This plugin requires the EduAdmin-WordPress-plugin to be installed and activated.', 'eduadmin-nets-easy-integration' ); ?></p>
             </div>
 			<?php
 		} );
@@ -45,26 +46,26 @@ add_action( 'admin_init', function () {
 	}
 } );
 
-if ( ! class_exists( 'EDU_DibsEasy_Loader' ) ) {
-	final class EDU_DibsEasy_Loader {
+if ( ! class_exists( 'EDU_NetsEasy_Loader' ) ) {
+	final class EDU_NetsEasy_Loader {
 		public function __construct() {
 			add_action( 'plugins_loaded', array( $this, 'init' ) );
 		}
 
 		public function init() {
 			if ( class_exists( 'EDU_Integration' ) ) {
-				require_once __DIR__ . '/class-eduadmin-dibs-easy-integration.php';
+				require_once __DIR__ . '/class-eduadmin-nets-easy-integration.php';
 
 				add_filter( 'edu_integrations', array( $this, 'add_integration' ) );
 			}
 		}
 
 		public function add_integration( $integrations ) {
-			$integrations[] = "EDU_DibsEasy";
+			$integrations[] = "EDU_NetsEasy";
 
 			return $integrations;
 		}
 	}
 
-	$edu_dibseasy_loader = new EDU_DibsEasy_Loader();
+	$edu_netseasy_loader = new EDU_NetsEasy_Loader();
 }

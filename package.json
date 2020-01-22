@@ -1,6 +1,6 @@
 {
   "name": "eduadmin-nets-easy-integration",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "repository": "https://github.com/MultinetInteractive/eduadmin-nets-easy-integration.git",
   "author": "Chris Gårdenberg <chga@multinet.se>",
@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "gulp": "^4.0.2",
-    "gulp-replace": "^1.0.0"
+    "gulp-replace": "^1.0.0",
+    "standard-version": "^7.1.0"
   },
   "config": {
     "eduadmin": {

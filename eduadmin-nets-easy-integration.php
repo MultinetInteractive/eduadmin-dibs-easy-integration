@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || die( 'This plugin must be run within the scope of WordPr
  * Plugin Name: EduAdmin Booking - Nets Easy integration-plugin
  * Plugin URI:  https://www.eduadmin.se
  * Description: Plugin to EduAdmin Booking to enable the Nets Easy-integration
- * Version:	1.0.0
+ * Version:	1.1.0
  * GitHub Plugin Uri: https://github.com/MultinetInteractive/eduadmin-nets-easy-integration
  * Requires at least: 4.9
  * Tested up to: 5.2

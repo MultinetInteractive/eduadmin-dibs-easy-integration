@@ -31,3 +31,11 @@ gulp.task("default", function () {
     gulp.watch("src/eduadmin-nets-easy-integration.php", gulp.series("eduadmin-version"));
     gulp.watch("src/readme.md", gulp.series("readme-version"));
 })
+
+gulp.task(
+    "debug",
+    gulp.series(
+        "readme-version",
+        "eduadmin-version"
+    )
+)

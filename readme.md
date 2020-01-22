@@ -2,8 +2,8 @@
 Contributors: mnchga
 Tags: booking, participants, courses, events, eduadmin, lega online, nets, nets easy
 Requires at least: 4.9
-Tested up to: 5.3
-Stable tag: 1.0.0
+Tested up to: 5.2
+Stable tag: 1.1.0
 Requires PHP: 5.2
 License: GPL3
 License-URI: https://www.gnu.org/licenses/gpl-3.0.en.html
@@ -21,15 +21,9 @@ Requires the following PHP-modules
 
 == Installation ==
 
-- Download and install the plugin from the plugin repository
-- Enter the Nets credentials into the plugins setting page
-- Enable test mode (so you can try it out first)
-- Add a page with the shortcode `[eduadmin-nets-testpage]` (takes attributes `programmebookingid` or `bookingid`)
-- Test if the workflow works
-  - Go to the test page
-  - See if any errors show up
-  - Use one of the test cards from Nets
-- When you're done testing, disable test mode and publish your website to the public
+-   Upload the zip-file (or install from WordPress) and activate the plugin
+-   Provide the API key from EduAdmin.
+-   Create pages for the different views and give them their shortcodes
 
 == Changelog ==
 

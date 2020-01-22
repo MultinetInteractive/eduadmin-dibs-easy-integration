@@ -6,7 +6,8 @@
   "author": "Chris Gårdenberg <chga@multinet.se>",
   "license": "MIT",
   "scripts": {
-    "dev": "yarn && yarn gulp"
+    "dev": "yarn && yarn gulp",
+    "bump-version": "yarn standard-version && yarn gulp debug && git add . && git add . && git commit -m \"chore: versionbump\" && git push --follow-tags"
   },
   "dependencies": {
     "gulp": "^4.0.2",

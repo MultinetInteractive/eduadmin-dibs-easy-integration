@@ -111,21 +111,20 @@ if ( ! class_exists( 'EDU_NetsEasy' ) ) {
 
 				$checkout = $this->create_checkout( $ebi );
 				if ( ! isset( $checkout->paymentId ) ) {
-					EDU()->write_debug( $checkout );
-
+					// TODO: Implement error handling in case the checkout creation fails
 					return;
 				}
 
 				echo '
 <script type="text/javascript" src="' . $checkout_url . '"></script>
-<div id="nets-checkout-content"></div>
+<div id="dibs-checkout-content"></div>
 <script type="text/javascript">
 var checkoutOptions = {
     checkoutKey: "' . $checkout_key . '",
     paymentId: "' . $checkout->paymentId . '"
 };
 
-var checkout = new Nets.Checkout(checkoutOptions);
+var checkout = new Dibs.Checkout(checkoutOptions);
 checkout.on("payment-completed", function(response) {
    location.href = "' . EDU()->session['return-url'] . '"
 });
@@ -163,15 +162,14 @@ checkout.on("payment-completed", function(response) {
 			if ( ! empty( $ebi->EventBooking['BookingId'] ) ) {
 				$reference_id = intval( $ebi->EventBooking['BookingId'] );
 
-				$_event      = EDUAPI()->OData->Events->GetItem( $ebi->EventBooking['EventId'] );
-				$current_url = $current_url;
-
+				$_event        = EDUAPI()->OData->Events->GetItem( $ebi->EventBooking['EventId'] );
 				$completed_url = add_query_arg(
 					array(
 						'paymentId'      => '{paymentGuid}',
 						'act'            => 'paymentCompleted',
 						'edu-valid-form' => wp_create_nonce( 'edu-booking-confirm' ),
-						'booking_id'     => $reference_id
+						'booking_id'     => $reference_id,
+						'edu-thankyou'   => $reference_id,
 					),
 					$current_url
 				);
@@ -181,18 +179,17 @@ checkout.on("payment-completed", function(response) {
 				$reference_id = intval( $ebi->EventBooking['ProgrammeBookingId'] );
 
 				$_event        = EDUAPI()->OData->ProgrammeStarts->GetItem( $ebi->EventBooking['ProgrammeStartId'] );
-				$current_url   = $current_url;
 				$completed_url = add_query_arg(
 					array(
 						'paymentId'            => '{paymentGuid}',
 						'act'                  => 'paymentCompleted',
 						'edu-valid-form'       => wp_create_nonce( 'edu-booking-confirm' ),
-						'programme_booking_id' => $reference_id
+						'programme_booking_id' => $reference_id,
+						'edu-thankyou'         => $reference_id,
 					),
 					$current_url
 				);
 			}
-
 
 			$rowExtraInfo = "";
 
@@ -367,44 +364,44 @@ checkout.on("payment-completed", function(response) {
 					$reference_id = $booking['ProgrammeBookingId'];
 				}
 
-				echo "<pre>" . print_r( $booking, true ) . "</pre>";
+
 				if ( $booking != null && intval( $payment->payment->orderDetails->reference ) == intval( $reference_id ) ) {
+					// TODO: Build a receipt page
+					echo "<pre>" . print_r( $booking, true ) . "</pre>";
+					echo "<pre>" . print_r( $payment, true ) . "</pre>";
 
-				}
+					if ( 'paymentCompleted' === $_GET['act'] ) {
+						if ( ! $test_mode ) {
+							$patch_booking = new stdClass();
 
-				echo "<pre>" . print_r( $payment, true ) . "</pre>";
+							$status = true;
 
-				if ( 'paymentCompleted' === $_GET['act'] ) {
-					if ( ! $test_mode ) {
-						$patch_booking = new stdClass();
+							if ( isset( $_GET['paymentFailed'] ) && 'true' === $_GET['paymentFailed'] ) {
+								$status = false;
+							}
 
-						$status = true;
+							$patch_booking->Paid = $status;
 
-						if ( isset( $_GET['paymentFailed'] ) && 'true' === $_GET['paymentFailed'] ) {
-							$status = false;
+							// We're setting this as a Card Payment, so that our service in the background will remove it if it doesn't get paid in time (15 minute slot)
+							$patch_booking->PaymentMethodId = 2;
+							if ( $booking_id > 0 ) {
+								EDUAPI()->REST->Booking->PatchBooking(
+									$booking_id,
+									$patch_booking
+								);
+							}
+
+							if ( $programme_booking_id > 0 ) {
+								EDUAPI()->REST->ProgrammeBooking->PatchBooking(
+									$programme_booking_id,
+									$patch_booking
+								);
+							}
 						}
 
-						$patch_booking->Paid = $status;
-
-						// We're setting this as a Card Payment, so that our service in the background will remove it if it doesn't get paid in time (15 minute slot)
-						$patch_booking->PaymentMethodId = 2;
-						if ( $booking_id > 0 ) {
-							EDUAPI()->REST->Booking->PatchBooking(
-								$booking_id,
-								$patch_booking
-							);
-						}
-
-						if ( $programme_booking_id > 0 ) {
-							EDUAPI()->REST->ProgrammeBooking->PatchBooking(
-								$programme_booking_id,
-								$patch_booking
-							);
-						}
+						EDU()->session['netseasy-order-id'] = null;
+						EDU()->session['return-url']        = null;
 					}
-
-					EDU()->session['netseasy-order-id'] = null;
-					EDU()->session['return-url']        = null;
 				}
 			}
 		}

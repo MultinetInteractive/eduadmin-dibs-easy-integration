@@ -54,7 +54,7 @@ if ( ! class_exists( 'EDU_NetsEasy_Loader' ) ) {
 
 		public function init() {
 			if ( class_exists( 'EDU_Integration' ) ) {
-				require_once __DIR__ . '/class-eduadmin-nets-easy-integration.php';
+				require_once __DIR__ . 'class-eduadmin-nets-easy-integration.php';
 
 				add_filter( 'edu_integrations', array( $this, 'add_integration' ) );
 			}
